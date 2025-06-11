@@ -1,6 +1,7 @@
 package com.example.authswitch.token;
 
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -14,18 +15,17 @@ import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.crypto.SecretKey;
+
 @Service
 public class JwtTokenService {
 
- private Key key;
+	private static final String SECRET="uH7pN2rPeT9vXrWqz8GxVrWbZy9sUwFg4XpEm6nBtOw";
+    private final SecretKey secretKey = Keys.hmacShaKeyFor(SECRET.getBytes());
 //Token validity in milliseconds (e.g., 15 minutes)
- private static final long ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000;
+ private static final long ACCESS_TOKEN_VALIDITY = 1 * 60 * 1000;
  // Refresh token validity (e.g., 7 days)
  private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000;
- @PostConstruct
- public void init() {
-     this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
- }
 
  public TokenResponse generateToken(String clientId) {
      long now = System.currentTimeMillis();
@@ -36,7 +36,7 @@ public class JwtTokenService {
              .setId(UUID.randomUUID().toString())
              .setIssuedAt(new Date(now))
              .setExpiration(new Date(now + ACCESS_TOKEN_VALIDITY))
-             .signWith(key)
+             .signWith(secretKey, SignatureAlgorithm.HS256)
              .compact();
 
      // Build refresh token
@@ -45,7 +45,7 @@ public class JwtTokenService {
              .setId(UUID.randomUUID().toString())
              .setIssuedAt(new Date(now))
              .setExpiration(new Date(now + REFRESH_TOKEN_VALIDITY))
-             .signWith(key)
+             .signWith(secretKey, SignatureAlgorithm.HS256)
              .compact();
 
      return new TokenResponse(accessToken, refreshToken, ACCESS_TOKEN_VALIDITY / 1000);
@@ -57,7 +57,7 @@ public class JwtTokenService {
 
  public String getClientIdFromToken(String token) {
      return Jwts.parserBuilder()
-             .setSigningKey(key)
+             .setSigningKey(secretKey)
              .build()
              .parseClaimsJws(token)
              .getBody()
@@ -66,7 +66,7 @@ public class JwtTokenService {
 
  public boolean isTokenValid(String token) {
      try {
-         Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+         Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
          return true;
      } catch (Exception e) {
          return false;
@@ -80,6 +80,14 @@ public class JwtTokenService {
  public long getRefreshTokenValidityMillis() {
      return REFRESH_TOKEN_VALIDITY;
  }
+ 
+ 
+ public Claims parseToken(String token) {
+	    return Jwts.parserBuilder()
+	        .setSigningKey(secretKey)
+	        .build()
+	        .parseClaimsJws(token)
+	        .getBody();
+	}
 } 
 
-//Next: RefreshTokenStore and TokenController
