@@ -1,6 +1,7 @@
 Spring Boot POS Authorization Switch
 This project is a Java Spring Boot-based POS Authorization Switch, capable of receiving encrypted card transaction requests, decrypting them using DUKPT, constructing ISO 8583 messages, and interacting with a Visa Simulator for authorization. It emulates a basic payment switch for testing and educational purposes.
 
+Port: 8082
 
 Features
 🔐 Dukpt Decryption of Encrypted PAN / Track Data
