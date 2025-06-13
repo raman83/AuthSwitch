@@ -1,3 +1,6 @@
+app:
+  environment: "local"
+
 server:
   port: 8082
 
